@@ -1,7 +1,12 @@
 ###
+### Install required packages
+# install.packages( "reshape2" )    #run only if necessary
+# install.packages( "data.table" )  #run only if necessary
+
+###
 ### Load required libraries
-    library( reshape2 )
-    library( data.table )
+require( reshape2 ); library( reshape2 )
+require( data.table ); library( data.table )
 
 
 ### =======================================================================
@@ -9,12 +14,12 @@
 ### =======================================================================
 ### Download the data file using https:// protocol
     setInternet2(use=TRUE) # Use only on Windows Platform
-    fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
-    download.file(fileURL, destfile="./getdata-dataFile.zip")
+    urlHome  <- "https://d396qusza40orc.cloudfront.net/"
+       zipFile <- "getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+    download.file(paste0(urlHome, zipFile), destfile=paste0("./", zipFile))
 
 ### Unzip the data file
-    unzip("./getdata-dataFile.zip")
-    unlink( "./getdata-dataFile.zip", force=TRUE )
+    unzip(zipFile)
 
 ### Move unzipped files to ./data folder & cleanup workspace
     unlink( "./data", recursive=TRUE, force=TRUE )
@@ -23,30 +28,28 @@
     unlink( "./UCI HAR Dataset", recursive=TRUE, force=TRUE )
      
 
-### ======================================================================================
-### STEP-1: Merge the training and the test sets to create one "data" set.
-###         Read input files from Test & Train datasets and join the "data" data sets
-### ======================================================================================
+### =======================================================================
+### STEP-1: Merges the training and the test sets to create one "data" set.
+###         Hint: Merge x_test & x_train 
+### =======================================================================
 ### Read files from Test folder
-    x_test        <- read.table("./data/test/X_test.txt") # Data
-    y_test        <- read.table("./data/test/y_test.txt") # Activities
-    subject_test  <- read.table("./data/test/subject_test.txt") # Subject
+    x_test  <- read.table("./data/test/X_test.txt") # Data
+    y_test  <- read.table("./data/test/y_test.txt") # Activities
+    s_test  <- read.table("./data/test/subject_test.txt") # Subject
 
 ### Read files from Train folder
-    x_train       <- read.table("./data/train/X_train.txt") # Data
-    y_train       <- read.table("./data/train/y_train.txt") # Activities
-    subject_train <- read.table("./data/train/subject_train.txt") # Subject
+    x_train <- read.table("./data/train/X_train.txt") # Data
+    y_train <- read.table("./data/train/y_train.txt") # Activities
+    s_train <- read.table("./data/train/subject_train.txt") # Subject
 
 ### Join the Test & Train "data" data sets. 
     joinData <- rbind(x_test, x_train)
 
 
-### ======================================================================================
-### STEP-2: Extract only the measurements on the mean and standard deviation for each 
-###         measurement. 
-###         Process features file and identify the required columns list for extracting 
-###         data (measurement columns relating to mean() and std() only)
-### ======================================================================================
+### =================================================================================================
+### STEP-2: Extracts only the measurements on the mean and standard deviation for each measurement.
+###         Hint: Extract only columns that contain "mean() and std()" in the name. 
+### =================================================================================================
 ### Process features file and cleanup column names. Keep only the measurement columns.
     featuresList <- read.table("./data/features.txt")
     selectedCols <- grep("-mean\\(\\)|-std\\(\\)", featuresList[, 2]) # Select columns for mean() and std() only
@@ -61,9 +64,8 @@
 
 
 ### ======================================================================================
-### STEP-3: Use descriptive activity names to name the activities in the data set.
-###         Join the Test & Train "activities" data sets. Merge joinActivity with
-###         activity_labels data set to add descriptive activity names to the activities.
+### STEP-3: Usees descriptive activity names to name the activities in the data set.
+###         Hint: Merge y_test & y_train 
 ### ======================================================================================
     joinActivity <- rbind(y_test, y_train)
     names(joinActivity) <- "activityID"
@@ -77,12 +79,10 @@
 
 
 ### ======================================================================================
-### STEP-4: Appropriately label the data set with descriptive variable names. 
-###         Join the Test & Train "subjects" data sets.
-###         Finally, merge all three joined data sets and appropriately labele each
-###         column with descriptive names. 
+### STEP-4: Appropriately labels the data set with descriptive variable names. 
+###         Hint: Merge s_test & s_train 
 ### ======================================================================================
-    joinSubject <- rbind(subject_test, subject_train)
+    joinSubject <- rbind(s_test, s_train)
     names(joinSubject) <- "subjectID"
 
 ### Write the combined data sets into a single output file setting row.name=FALSE
@@ -95,7 +95,7 @@
 ###         with the average of each variable for each activity and each subject.
 ### ======================================================================================
 
-### Group combined data by activityLabel, activityID, and subjectID after computing std() on mean()
+### Generate Tidy Data of averages on combined data grouped by activityLabel, activityID, and subjectID
     tidyData <- df[, lapply(.SD, mean), by=c("activityLabel", "activityID", "subjectID")]
 
 ### Write the tidyData into a single output file setting row.name=FALSE
